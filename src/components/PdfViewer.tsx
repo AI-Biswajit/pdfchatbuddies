@@ -14,7 +14,7 @@ export const PdfViewer: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [renderTask, setRenderTask] = useState<pdfjs.PDFRenderTask | null>(null);
+  const [renderTask, setRenderTask] = useState<pdfjs.RenderTask | null>(null);
   const [pdfDocument, setPdfDocument] = useState<pdfjs.PDFDocumentProxy | null>(null);
 
   const {
@@ -131,11 +131,13 @@ export const PdfViewer: React.FC = () => {
   };
 
   const zoomIn = () => {
-    setCurrentScale(prev => Math.min(prev + 0.1, 3.0));
+    const newScale = Math.min(currentScale + 0.1, 3.0);
+    setCurrentScale(newScale);
   };
 
   const zoomOut = () => {
-    setCurrentScale(prev => Math.max(prev - 0.1, 0.5));
+    const newScale = Math.max(currentScale - 0.1, 0.5);
+    setCurrentScale(newScale);
   };
 
   return (
