@@ -3,13 +3,13 @@ import React, { useEffect, useRef, useState } from 'react';
 import { usePdf } from '@/context/PdfContext';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { ChevronLeft, ChevronRight, Minus, Plus, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Minus, Plus, Loader2, FileText, AlertTriangle } from 'lucide-react';
 import { PdfSearch } from './PdfSearch';
 import * as pdfjs from 'pdfjs-dist';
 import { RenderTask } from 'pdfjs-dist';
+import { toast } from 'sonner';
 
-// Configure the worker source - IMPORTANT: This needs to be done before any PDF operations
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+// We're using the worker configuration from pdfUtils.ts
 
 export const PdfViewer: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -18,6 +18,7 @@ export const PdfViewer: React.FC = () => {
   const [renderTask, setRenderTask] = useState<RenderTask | null>(null);
   const [pdfDocument, setPdfDocument] = useState<pdfjs.PDFDocumentProxy | null>(null);
   const [renderError, setRenderError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   const {
     pdfFile,
@@ -30,7 +31,7 @@ export const PdfViewer: React.FC = () => {
     setProcessingError
   } = usePdf();
 
-  // Load PDF document when file changes
+  // Load PDF document when file changes or when retrying
   useEffect(() => {
     if (!pdfFile) return;
 
@@ -49,11 +50,17 @@ export const PdfViewer: React.FC = () => {
       setPdfDocument(null);
     }
     
-    const loadingTask = pdfjs.getDocument({
+    const loadOptions = {
       url: pdfFile.url,
-      cMapUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/cmaps/',
+      cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
       cMapPacked: true,
-    });
+      enableXfa: true,
+      disableRange: true,
+      disableStream: true,
+    };
+    
+    console.log("Loading PDF with options:", loadOptions);
+    const loadingTask = pdfjs.getDocument(loadOptions);
     
     loadingTask.promise.then(
       (doc) => {
@@ -64,21 +71,27 @@ export const PdfViewer: React.FC = () => {
         
         if (doc.numPages === 0) {
           setIsLoading(false);
-          setRenderError('The PDF document appears to be empty.');
-          setProcessingError('The PDF document appears to be empty.');
+          const errorMsg = 'The PDF document appears to be empty.';
+          setRenderError(errorMsg);
+          setProcessingError(errorMsg);
+          toast.error(errorMsg);
         }
       },
       (error) => {
         console.error('Error loading PDF:', error);
-        setRenderError(`Failed to load the PDF document: ${error.message}`);
-        setProcessingError(`Failed to load the PDF document: ${error.message}`);
+        const errorMsg = `Failed to load the PDF document: ${error.message}`;
+        setRenderError(errorMsg);
+        setProcessingError(errorMsg);
         setIsLoading(false);
+        toast.error(errorMsg);
       }
     ).catch(error => {
       console.error('Unhandled error loading PDF:', error);
-      setRenderError(`Failed to load the PDF document: ${error.message}`);
-      setProcessingError(`Failed to load the PDF document: ${error.message}`);
+      const errorMsg = `Failed to load the PDF document: ${error.message}`;
+      setRenderError(errorMsg);
+      setProcessingError(errorMsg);
       setIsLoading(false);
+      toast.error(errorMsg);
     });
 
     // Cleanup
@@ -91,15 +104,11 @@ export const PdfViewer: React.FC = () => {
         loadingTask.destroy().catch(err => console.error("Error destroying loading task:", err));
       }
       
-      if (pdfFile?.url) {
-        URL.revokeObjectURL(pdfFile.url);
-      }
-      
       if (pdfDocument) {
         pdfDocument.destroy().catch(err => console.error("Error destroying PDF document:", err));
       }
     };
-  }, [pdfFile]);
+  }, [pdfFile, retryCount]);
 
   // Render PDF page when page or scale changes
   useEffect(() => {
@@ -129,6 +138,7 @@ export const PdfViewer: React.FC = () => {
         if (!context) {
           setIsLoading(false);
           setRenderError('Failed to get canvas context.');
+          toast.error('Failed to get canvas context.');
           return;
         }
         
@@ -155,22 +165,26 @@ export const PdfViewer: React.FC = () => {
             if (error && error.name !== 'RenderingCancelledException') {
               console.error('Error rendering PDF page:', error);
               setRenderError(`Failed to render the PDF page: ${error.message}`);
+              toast.error(`Failed to render the PDF page: ${error.message}`);
             }
             setIsLoading(false);
           }
         ).catch(error => {
           console.error('Unhandled error rendering PDF page:', error);
           setIsLoading(false);
+          toast.error(`Error rendering PDF page: ${error.message}`);
         });
       },
       (error) => {
         console.error('Error getting PDF page:', error);
         setRenderError(`Failed to get the PDF page: ${error.message}`);
         setIsLoading(false);
+        toast.error(`Failed to get the PDF page: ${error.message}`);
       }
     ).catch(error => {
       console.error('Unhandled error getting PDF page:', error);
       setIsLoading(false);
+      toast.error(`Error getting PDF page: ${error.message}`);
     });
 
     return () => {
@@ -201,10 +215,16 @@ export const PdfViewer: React.FC = () => {
     setCurrentScale(Math.max(currentScale - 0.1, 0.5));
   };
 
+  const handleRetry = () => {
+    setRetryCount(prev => prev + 1);
+    setRenderError(null);
+    toast.info("Retrying PDF load...");
+  };
+
   return (
     <div className="flex h-full flex-1 flex-col">
       {/* PDF Controls */}
-      {pdfFile && (
+      {pdfFile && !renderError && (
         <>
         <div className="flex items-center justify-between border-b border-chat-border bg-background p-3 pdf-controls">
           <div className="flex items-center gap-2">
@@ -259,7 +279,7 @@ export const PdfViewer: React.FC = () => {
             </Button>
           </div>
         </div>
-        <PdfSearch />
+        {!renderError && <PdfSearch />}
         </>
       )}
       
@@ -271,7 +291,7 @@ export const PdfViewer: React.FC = () => {
         {!pdfFile ? (
           <div className="flex h-full flex-col items-center justify-center">
             <div className="mb-4 rounded-full bg-chat-primary/10 p-4">
-              <FileTextIcon className="h-12 w-12 text-chat-primary" />
+              <FileText className="h-12 w-12 text-chat-primary" />
             </div>
             <h3 className="mb-2 text-xl font-semibold">No PDF loaded</h3>
             <p className="text-muted-foreground">
@@ -286,12 +306,19 @@ export const PdfViewer: React.FC = () => {
         ) : renderError ? (
           <div className="flex h-full flex-col items-center justify-center">
             <div className="mb-4 rounded-full bg-destructive/10 p-4">
-              <AlertTriangleIcon className="h-12 w-12 text-destructive" />
+              <AlertTriangle className="h-12 w-12 text-destructive" />
             </div>
             <h3 className="mb-2 text-xl font-semibold text-destructive">Error</h3>
             <p className="text-muted-foreground text-center max-w-md">
               {renderError}
             </p>
+            <Button
+              onClick={handleRetry}
+              variant="outline"
+              className="mt-4"
+            >
+              Retry
+            </Button>
           </div>
         ) : (
           <div className={cn(
@@ -305,39 +332,3 @@ export const PdfViewer: React.FC = () => {
     </div>
   );
 };
-
-const FileTextIcon = ({ className }: { className?: string }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-    <polyline points="14 2 14 8 20 8" />
-    <line x1="16" y1="13" x2="8" y2="13" />
-    <line x1="16" y1="17" x2="8" y2="17" />
-    <line x1="10" y1="9" x2="8" y2="9" />
-  </svg>
-);
-
-const AlertTriangleIcon = ({ className }: { className?: string }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-    <line x1="12" y1="9" x2="12" y2="13"></line>
-    <line x1="12" y1="17" x2="12.01" y2="17"></line>
-  </svg>
-);

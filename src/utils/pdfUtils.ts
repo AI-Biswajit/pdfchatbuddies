@@ -1,9 +1,10 @@
 import * as pdfjs from 'pdfjs-dist';
 
-// Initialize PDF.js worker
-const pdfjsWorker = './pdf.worker.min.js';
+// Initialize PDF.js worker properly
+const pdfjsVersion = pdfjs.version;
 if (!pdfjs.GlobalWorkerOptions.workerSrc) {
-  pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+  // Use CDN worker to avoid issues with blob URLs
+  pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsVersion}/pdf.worker.min.js`;
 }
 
 /**
@@ -13,10 +14,14 @@ if (!pdfjs.GlobalWorkerOptions.workerSrc) {
  */
 export const extractTextFromPdf = async (pdfUrl: string): Promise<string> => {
   try {
+    // Create a new loading task with proper configuration
     const loadingTask = pdfjs.getDocument({
       url: pdfUrl,
-      cMapUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/cmaps/',
+      cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjsVersion}/cmaps/`,
       cMapPacked: true,
+      enableXfa: true, // Enable XFA forms for better compatibility
+      disableRange: true, // Disable range requests which can cause issues with blob URLs
+      disableStream: true, // Disable streaming for better blob URL handling
     });
     
     const pdf = await loadingTask.promise;

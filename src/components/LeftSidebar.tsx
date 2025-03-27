@@ -38,6 +38,7 @@ export const LeftSidebar: React.FC = () => {
     try {
       // Create object URL for the PDF
       const objectUrl = URL.createObjectURL(file);
+      console.log("Created object URL:", objectUrl);
       
       // Set the PDF file object first
       setPdfFile({
@@ -47,7 +48,7 @@ export const LeftSidebar: React.FC = () => {
 
       toast.info('Analyzing PDF & Generating Summary...');
       
-      // Extract text from PDF (don't block UI on this)
+      // Extract text from PDF in the background
       setTimeout(async () => {
         try {
           const text = await extractTextFromPdf(objectUrl);
@@ -64,7 +65,7 @@ export const LeftSidebar: React.FC = () => {
         } finally {
           setIsProcessing(false);
         }
-      }, 100);
+      }, 500); // Slightly longer timeout to ensure PDF viewer has time to initialize
     } catch (error) {
       console.error('Error processing PDF:', error);
       setProcessingError('Failed to process the document.');

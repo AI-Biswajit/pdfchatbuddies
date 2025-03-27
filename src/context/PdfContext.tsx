@@ -8,6 +8,7 @@ import {
   PdfContextType
 } from '@/types';
 import { extractTextFromPdf } from '@/utils/pdfUtils';
+import { toast } from 'sonner';
 
 const PdfContext = createContext<PdfContextType | undefined>(undefined);
 
@@ -41,6 +42,7 @@ export const PdfProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       setTotalPages(0);
       setExtractedText('');
       setSummary(null);
+      setProcessingError(null);
     }
   };
 
