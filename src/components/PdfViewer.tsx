@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight, Minus, Plus, Loader2, Search } from 'lucide-react';
 import { PdfSearch } from './PdfSearch';
 import * as pdfjs from 'pdfjs-dist';
+import { RenderTask } from 'pdfjs-dist';
 
 // Configure the worker source
 const pdfjsWorker = await import('pdfjs-dist/build/pdf.worker.entry');
@@ -15,8 +16,9 @@ export const PdfViewer: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [renderTask, setRenderTask] = useState<pdfjs.RenderTask | null>(null);
+  const [renderTask, setRenderTask] = useState<RenderTask | null>(null);
   const [pdfDocument, setPdfDocument] = useState<pdfjs.PDFDocumentProxy | null>(null);
+  const [renderError, setRenderError] = useState<string | null>(null);
 
   const {
     pdfFile,
@@ -34,6 +36,7 @@ export const PdfViewer: React.FC = () => {
     if (!pdfFile) return;
 
     setIsLoading(true);
+    setRenderError(null);
     
     // Cancel any ongoing render task
     if (renderTask) {
@@ -53,27 +56,32 @@ export const PdfViewer: React.FC = () => {
         setPdfDocument(doc);
         setTotalPages(doc.numPages);
         setCurrentPage(1);
-        // We don't set isLoading to false here anymore, as we'll let the page rendering effect handle that
+        // We don't set isLoading to false here, as we'll let the page rendering effect handle that
         // However, if there's no pages, we should set isLoading to false
         if (doc.numPages === 0) {
           setIsLoading(false);
+          setRenderError('The PDF document appears to be empty.');
           setProcessingError('The PDF document appears to be empty.');
         }
       },
       (error) => {
         console.error('Error loading PDF:', error);
+        setRenderError('Failed to load the PDF document.');
         setProcessingError('Failed to load the PDF document.');
         setIsLoading(false);
       }
     ).catch(error => {
       console.error('Unhandled error loading PDF:', error);
+      setRenderError('Failed to load the PDF document.');
       setProcessingError('Failed to load the PDF document.');
       setIsLoading(false);
     });
 
     // Cleanup
     return () => {
-      loadingTask.destroy();
+      if (loadingTask) {
+        loadingTask.destroy();
+      }
       if (pdfFile?.url) {
         URL.revokeObjectURL(pdfFile.url);
       }
@@ -85,77 +93,68 @@ export const PdfViewer: React.FC = () => {
 
   // Render PDF page when page or scale changes
   useEffect(() => {
-    if (!pdfDocument || !canvasRef.current) return;
+    if (!pdfDocument) return;
+    if (!canvasRef.current) return;
 
     setIsLoading(true);
+    setRenderError(null);
     
     // Cancel any ongoing render task
     if (renderTask) {
       renderTask.cancel();
     }
 
-    // Determine if this is the initial render after PDF load
-    const isInitialRender = currentPage === 1 && pdfDocument.numPages > 0;
-    
-    // Use a longer delay for initial render to ensure PDF is fully loaded
-    const delayTime = isInitialRender ? 200 : 50;
-
-    // Add a delay to ensure the PDF document is fully loaded
-    // This helps with the initial rendering of the first page
-    const timer = setTimeout(() => {
-      // Get the current page from the document
-      pdfDocument.getPage(currentPage).then(
-        (page) => {
-          const canvas = canvasRef.current;
-          if (!canvas) {
-            setIsLoading(false);
-            return;
-          }
-          
-          const context = canvas.getContext('2d');
-          if (!context) {
-            setIsLoading(false);
-            setProcessingError('Failed to get canvas context.');
-            return;
-          }
-          
-          const viewport = page.getViewport({ scale: currentScale });
-
-          // Set canvas dimensions to match the viewport
-          canvas.height = viewport.height;
-          canvas.width = viewport.width;
-
-          // Render the page
-          const newRenderTask = page.render({
-            canvasContext: context,
-            viewport: viewport,
-          });
-
-          setRenderTask(newRenderTask);
-
-          newRenderTask.promise.then(
-            () => {
-              setIsLoading(false);
-            },
-            (error) => {
-              if (error && error.name !== 'RenderingCancelledException') {
-                console.error('Error rendering PDF page:', error);
-                setProcessingError('Failed to render the PDF page.');
-              }
-              setIsLoading(false);
-            }
-          );
-        },
-        (error) => {
-          console.error('Error getting PDF page:', error);
-          setProcessingError('Failed to get the PDF page.');
+    // Get the current page from the document
+    pdfDocument.getPage(currentPage).then(
+      (page) => {
+        const canvas = canvasRef.current;
+        if (!canvas) {
           setIsLoading(false);
+          return;
         }
-      );
-    }, delayTime); // Longer delay for initial render, shorter for subsequent pages
+        
+        const context = canvas.getContext('2d');
+        if (!context) {
+          setIsLoading(false);
+          setRenderError('Failed to get canvas context.');
+          return;
+        }
+        
+        const viewport = page.getViewport({ scale: currentScale });
+
+        // Set canvas dimensions to match the viewport
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        // Render the page
+        const newRenderTask = page.render({
+          canvasContext: context,
+          viewport: viewport,
+        });
+
+        setRenderTask(newRenderTask);
+
+        newRenderTask.promise.then(
+          () => {
+            setIsLoading(false);
+          },
+          (error) => {
+            if (error && error.name !== 'RenderingCancelledException') {
+              console.error('Error rendering PDF page:', error);
+              setRenderError('Failed to render the PDF page.');
+            }
+            setIsLoading(false);
+          }
+        );
+      },
+      (error) => {
+        console.error('Error getting PDF page:', error);
+        setRenderError('Failed to get the PDF page.');
+        setIsLoading(false);
+      }
+    );
 
     return () => {
-      clearTimeout(timer);
       if (renderTask) {
         renderTask.cancel();
       }
@@ -175,13 +174,11 @@ export const PdfViewer: React.FC = () => {
   };
 
   const zoomIn = () => {
-    const newScale = Math.min(currentScale + 0.1, 3.0);
-    setCurrentScale(newScale);
+    setCurrentScale(Math.min(currentScale + 0.1, 3.0));
   };
 
   const zoomOut = () => {
-    const newScale = Math.max(currentScale - 0.1, 0.5);
-    setCurrentScale(newScale);
+    setCurrentScale(Math.max(currentScale - 0.1, 0.5));
   };
 
   return (
@@ -249,7 +246,7 @@ export const PdfViewer: React.FC = () => {
       {/* PDF Viewer Area */}
       <div
         ref={containerRef}
-        className="flex-1 overflow-auto bg-gray-100 p-4 flex justify-center"
+        className="flex-1 overflow-auto bg-gray-100 dark:bg-gray-800 p-4 flex justify-center"
       >
         {!pdfFile ? (
           <div className="flex h-full flex-col items-center justify-center">
@@ -265,6 +262,16 @@ export const PdfViewer: React.FC = () => {
           <div className="flex h-full flex-col items-center justify-center">
             <Loader2 className="h-12 w-12 animate-spin text-chat-primary" />
             <p className="mt-4 text-muted-foreground">Loading PDF...</p>
+          </div>
+        ) : renderError ? (
+          <div className="flex h-full flex-col items-center justify-center">
+            <div className="mb-4 rounded-full bg-destructive/10 p-4">
+              <AlertTriangleIcon className="h-12 w-12 text-destructive" />
+            </div>
+            <h3 className="mb-2 text-xl font-semibold text-destructive">Error</h3>
+            <p className="text-muted-foreground text-center max-w-md">
+              {renderError}
+            </p>
           </div>
         ) : (
           <div className={cn(
@@ -295,5 +302,22 @@ const FileTextIcon = ({ className }: { className?: string }) => (
     <line x1="16" y1="13" x2="8" y2="13" />
     <line x1="16" y1="17" x2="8" y2="17" />
     <line x1="10" y1="9" x2="8" y2="9" />
+  </svg>
+);
+
+const AlertTriangleIcon = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+    <line x1="12" y1="9" x2="12" y2="13"></line>
+    <line x1="12" y1="17" x2="12.01" y2="17"></line>
   </svg>
 );

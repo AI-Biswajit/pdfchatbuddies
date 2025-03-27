@@ -1,6 +1,8 @@
+
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Moon, Sun } from 'lucide-react';
+import { toast } from 'sonner';
 
 export const ThemeToggle: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -26,10 +28,12 @@ export const ThemeToggle: React.FC = () => {
       document.documentElement.classList.remove('dark');
       document.documentElement.setAttribute('data-theme', 'light');
       localStorage.setItem('theme', 'light');
+      toast.success('Light mode activated');
     } else {
       document.documentElement.classList.add('dark');
       document.documentElement.setAttribute('data-theme', 'dark');
       localStorage.setItem('theme', 'dark');
+      toast.success('Dark mode activated');
     }
     setIsDarkMode(!isDarkMode);
   };
@@ -39,13 +43,13 @@ export const ThemeToggle: React.FC = () => {
       variant="ghost"
       size="icon"
       onClick={toggleTheme}
-      className="h-8 w-8"
+      className="h-8 w-8 rounded-full transition-all hover:bg-gray-700"
       aria-label="Toggle theme"
     >
       {isDarkMode ? (
-        <Sun className="h-4 w-4" />
+        <Sun className="h-5 w-5 text-yellow-300" />
       ) : (
-        <Moon className="h-4 w-4" />
+        <Moon className="h-5 w-5 text-purple-300" />
       )}
     </Button>
   );
