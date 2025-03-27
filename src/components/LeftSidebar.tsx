@@ -1,3 +1,4 @@
+
 import React, { useRef } from 'react';
 import { usePdf } from '@/context/PdfContext';
 import { generateMockSummary } from '@/utils/mockData';
@@ -34,37 +35,40 @@ export const LeftSidebar: React.FC = () => {
     setIsProcessing(true);
     setChatMessages([]);
 
-    // Create object URL for the PDF
-    const objectUrl = URL.createObjectURL(file);
-    
-    setPdfFile({
-      name: file.name,
-      url: objectUrl,
-    });
-
-    // Process the PDF
     try {
+      // Create object URL for the PDF
+      const objectUrl = URL.createObjectURL(file);
+      
+      // Set the PDF file object first
+      setPdfFile({
+        name: file.name,
+        url: objectUrl,
+      });
+
       toast.info('Analyzing PDF & Generating Summary...');
       
-      // Extract text from PDF
-      try {
-        const text = await extractTextFromPdf(objectUrl);
-        setExtractedText(text);
-      } catch (error) {
-        console.error('Error extracting text from PDF:', error);
-        // Continue even if text extraction fails
-      }
-      
-      // Set mock summary
-      const mockSummary = generateMockSummary(file.name);
-      setSummary(mockSummary);
-      
-      toast.success('PDF processed successfully!');
+      // Extract text from PDF (don't block UI on this)
+      setTimeout(async () => {
+        try {
+          const text = await extractTextFromPdf(objectUrl);
+          setExtractedText(text);
+          
+          // Set mock summary
+          const mockSummary = generateMockSummary(file.name);
+          setSummary(mockSummary);
+          
+          toast.success('PDF processed successfully!');
+        } catch (error) {
+          console.error('Error extracting text from PDF:', error);
+          toast.error('Warning: Could not extract text from PDF. Some features may be limited.');
+        } finally {
+          setIsProcessing(false);
+        }
+      }, 100);
     } catch (error) {
       console.error('Error processing PDF:', error);
       setProcessingError('Failed to process the document.');
       toast.error('Failed to process the document.');
-    } finally {
       setIsProcessing(false);
     }
 

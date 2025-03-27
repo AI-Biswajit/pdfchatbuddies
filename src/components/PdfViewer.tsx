@@ -3,14 +3,13 @@ import React, { useEffect, useRef, useState } from 'react';
 import { usePdf } from '@/context/PdfContext';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { ChevronLeft, ChevronRight, Minus, Plus, Loader2, Search } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Minus, Plus, Loader2 } from 'lucide-react';
 import { PdfSearch } from './PdfSearch';
 import * as pdfjs from 'pdfjs-dist';
 import { RenderTask } from 'pdfjs-dist';
 
-// Configure the worker source
-const pdfjsWorker = await import('pdfjs-dist/build/pdf.worker.entry');
-pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+// Configure the worker source - IMPORTANT: This needs to be done before any PDF operations
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 export const PdfViewer: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -41,23 +40,28 @@ export const PdfViewer: React.FC = () => {
     // Cancel any ongoing render task
     if (renderTask) {
       renderTask.cancel();
+      setRenderTask(null);
     }
     
     // Clean up previous PDF document
     if (pdfDocument) {
-      pdfDocument.destroy();
+      pdfDocument.destroy().catch(err => console.error("Error destroying PDF document:", err));
       setPdfDocument(null);
     }
     
-    const loadingTask = pdfjs.getDocument(pdfFile.url);
+    const loadingTask = pdfjs.getDocument({
+      url: pdfFile.url,
+      cMapUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/cmaps/',
+      cMapPacked: true,
+    });
     
     loadingTask.promise.then(
       (doc) => {
+        console.log("PDF document loaded successfully");
         setPdfDocument(doc);
         setTotalPages(doc.numPages);
         setCurrentPage(1);
-        // We don't set isLoading to false here, as we'll let the page rendering effect handle that
-        // However, if there's no pages, we should set isLoading to false
+        
         if (doc.numPages === 0) {
           setIsLoading(false);
           setRenderError('The PDF document appears to be empty.');
@@ -66,35 +70,42 @@ export const PdfViewer: React.FC = () => {
       },
       (error) => {
         console.error('Error loading PDF:', error);
-        setRenderError('Failed to load the PDF document.');
-        setProcessingError('Failed to load the PDF document.');
+        setRenderError(`Failed to load the PDF document: ${error.message}`);
+        setProcessingError(`Failed to load the PDF document: ${error.message}`);
         setIsLoading(false);
       }
     ).catch(error => {
       console.error('Unhandled error loading PDF:', error);
-      setRenderError('Failed to load the PDF document.');
-      setProcessingError('Failed to load the PDF document.');
+      setRenderError(`Failed to load the PDF document: ${error.message}`);
+      setProcessingError(`Failed to load the PDF document: ${error.message}`);
       setIsLoading(false);
     });
 
     // Cleanup
     return () => {
-      if (loadingTask) {
-        loadingTask.destroy();
+      if (renderTask) {
+        renderTask.cancel();
       }
+      
+      if (loadingTask) {
+        loadingTask.destroy().catch(err => console.error("Error destroying loading task:", err));
+      }
+      
       if (pdfFile?.url) {
         URL.revokeObjectURL(pdfFile.url);
       }
+      
       if (pdfDocument) {
-        pdfDocument.destroy();
+        pdfDocument.destroy().catch(err => console.error("Error destroying PDF document:", err));
       }
     };
   }, [pdfFile]);
 
   // Render PDF page when page or scale changes
   useEffect(() => {
-    if (!pdfDocument) return;
-    if (!canvasRef.current) return;
+    if (!pdfDocument || !canvasRef.current) {
+      return;
+    }
 
     setIsLoading(true);
     setRenderError(null);
@@ -102,6 +113,7 @@ export const PdfViewer: React.FC = () => {
     // Cancel any ongoing render task
     if (renderTask) {
       renderTask.cancel();
+      setRenderTask(null);
     }
 
     // Get the current page from the document
@@ -136,27 +148,35 @@ export const PdfViewer: React.FC = () => {
 
         newRenderTask.promise.then(
           () => {
+            console.log("Page rendered successfully");
             setIsLoading(false);
           },
           (error) => {
             if (error && error.name !== 'RenderingCancelledException') {
               console.error('Error rendering PDF page:', error);
-              setRenderError('Failed to render the PDF page.');
+              setRenderError(`Failed to render the PDF page: ${error.message}`);
             }
             setIsLoading(false);
           }
-        );
+        ).catch(error => {
+          console.error('Unhandled error rendering PDF page:', error);
+          setIsLoading(false);
+        });
       },
       (error) => {
         console.error('Error getting PDF page:', error);
-        setRenderError('Failed to get the PDF page.');
+        setRenderError(`Failed to get the PDF page: ${error.message}`);
         setIsLoading(false);
       }
-    );
+    ).catch(error => {
+      console.error('Unhandled error getting PDF page:', error);
+      setIsLoading(false);
+    });
 
     return () => {
       if (renderTask) {
         renderTask.cancel();
+        setRenderTask(null);
       }
     };
   }, [pdfDocument, currentPage, currentScale]);
@@ -246,7 +266,7 @@ export const PdfViewer: React.FC = () => {
       {/* PDF Viewer Area */}
       <div
         ref={containerRef}
-        className="flex-1 overflow-auto bg-gray-100 dark:bg-gray-800 p-4 flex justify-center"
+        className="flex-1 overflow-auto bg-gray-100 dark:bg-gray-800 p-4 flex justify-center items-center"
       >
         {!pdfFile ? (
           <div className="flex h-full flex-col items-center justify-center">

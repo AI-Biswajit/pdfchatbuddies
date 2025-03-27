@@ -1,5 +1,11 @@
 import * as pdfjs from 'pdfjs-dist';
 
+// Initialize PDF.js worker
+const pdfjsWorker = './pdf.worker.min.js';
+if (!pdfjs.GlobalWorkerOptions.workerSrc) {
+  pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+}
+
 /**
  * Extract text content from a PDF file
  * @param pdfUrl URL of the PDF file
@@ -7,7 +13,12 @@ import * as pdfjs from 'pdfjs-dist';
  */
 export const extractTextFromPdf = async (pdfUrl: string): Promise<string> => {
   try {
-    const loadingTask = pdfjs.getDocument(pdfUrl);
+    const loadingTask = pdfjs.getDocument({
+      url: pdfUrl,
+      cMapUrl: 'https://unpkg.com/pdfjs-dist@3.11.174/cmaps/',
+      cMapPacked: true,
+    });
+    
     const pdf = await loadingTask.promise;
     
     let fullText = '';
@@ -28,7 +39,7 @@ export const extractTextFromPdf = async (pdfUrl: string): Promise<string> => {
     return fullText.trim();
   } catch (error) {
     console.error('Error extracting text from PDF:', error);
-    throw new Error('Failed to extract text from PDF');
+    throw new Error(`Failed to extract text from PDF: ${error instanceof Error ? error.message : String(error)}`);
   }
 };
 

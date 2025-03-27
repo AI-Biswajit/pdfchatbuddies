@@ -22,6 +22,28 @@ export const PdfProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [currentScale, setCurrentScale] = useState<number>(1.0);
   const [extractedText, setExtractedText] = useState<string>('');
 
+  // Function to set a new PDF file, cleaning up previous resources
+  const setPdf = (file: PdfFile | null) => {
+    // Cleanup old URL if exists
+    if (pdfFile?.url) {
+      try {
+        URL.revokeObjectURL(pdfFile.url);
+      } catch (error) {
+        console.error("Error revoking object URL:", error);
+      }
+    }
+    
+    setPdfFile(file);
+    
+    // Reset related states when changing PDF
+    if (!file) {
+      setCurrentPage(1);
+      setTotalPages(0);
+      setExtractedText('');
+      setSummary(null);
+    }
+  };
+
   const addChatMessage = (message: Omit<ChatMessage, 'id' | 'timestamp'>) => {
     const newMessage: ChatMessage = {
       ...message,
@@ -36,7 +58,7 @@ export const PdfProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     <PdfContext.Provider
       value={{
         pdfFile,
-        setPdfFile,
+        setPdfFile: setPdf,
         currentPage,
         setCurrentPage,
         totalPages,

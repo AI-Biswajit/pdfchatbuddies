@@ -19,12 +19,12 @@ const Index: React.FC = () => {
         <div className="flex h-screen w-full overflow-hidden">
           <LeftSidebar />
           <main className="flex flex-1 overflow-hidden">
-            <ResizablePanelGroup direction="horizontal">
-              <ResizablePanel defaultSize={65} minSize={40} maxSize={75}>
+            <ResizablePanelGroup direction="horizontal" className="w-full">
+              <ResizablePanel defaultSize={65} minSize={30} maxSize={80} className="transition-all">
                 <PdfViewer />
               </ResizablePanel>
-              <ResizableHandle withHandle />
-              <ResizablePanel defaultSize={35} minSize={25}>
+              <ResizableHandle withHandle className="transition-colors hover:bg-primary" />
+              <ResizablePanel defaultSize={35} minSize={20} maxSize={70} className="transition-all">
                 <ChatPanel />
               </ResizablePanel>
             </ResizablePanelGroup>
