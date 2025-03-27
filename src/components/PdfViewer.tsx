@@ -34,6 +34,17 @@ export const PdfViewer: React.FC = () => {
 
     setIsLoading(true);
     
+    // Cancel any ongoing render task
+    if (renderTask) {
+      renderTask.cancel();
+    }
+    
+    // Clean up previous PDF document
+    if (pdfDocument) {
+      pdfDocument.destroy();
+      setPdfDocument(null);
+    }
+    
     const loadingTask = pdfjs.getDocument(pdfFile.url);
     
     loadingTask.promise.then(
@@ -73,10 +84,21 @@ export const PdfViewer: React.FC = () => {
       renderTask.cancel();
     }
 
+    // Get the current page from the document
     pdfDocument.getPage(currentPage).then(
       (page) => {
-        const canvas = canvasRef.current!;
-        const context = canvas.getContext('2d')!;
+        const canvas = canvasRef.current;
+        if (!canvas) {
+          setIsLoading(false);
+          return;
+        }
+        
+        const context = canvas.getContext('2d');
+        if (!context) {
+          setIsLoading(false);
+          return;
+        }
+        
         const viewport = page.getViewport({ scale: currentScale });
 
         // Set canvas dimensions to match the viewport
