@@ -39,4 +39,6 @@ export interface PdfContextType {
   addChatMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) => void;
   currentScale: number;
   setCurrentScale: (scale: number) => void;
+  extractedText: string;
+  setExtractedText: (text: string) => void;
 }

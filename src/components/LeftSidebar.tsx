@@ -1,9 +1,11 @@
 import React, { useRef } from 'react';
 import { usePdf } from '@/context/PdfContext';
 import { generateMockSummary } from '@/utils/mockData';
+import { extractTextFromPdf } from '@/utils/pdfUtils';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { FileText, FolderPlus, LogIn, Settings, Plus } from 'lucide-react';
+import { ThemeToggle } from './ThemeToggle';
 
 export const LeftSidebar: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -14,6 +16,7 @@ export const LeftSidebar: React.FC = () => {
     setSummary,
     setChatMessages,
     pdfFile,
+    setExtractedText
   } = usePdf();
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -39,11 +42,18 @@ export const LeftSidebar: React.FC = () => {
       url: objectUrl,
     });
 
-    // Simulate processing delay
+    // Process the PDF
     try {
       toast.info('Analyzing PDF & Generating Summary...');
       
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Extract text from PDF
+      try {
+        const text = await extractTextFromPdf(objectUrl);
+        setExtractedText(text);
+      } catch (error) {
+        console.error('Error extracting text from PDF:', error);
+        // Continue even if text extraction fails
+      }
       
       // Set mock summary
       const mockSummary = generateMockSummary(file.name);
@@ -76,11 +86,14 @@ export const LeftSidebar: React.FC = () => {
 
   return (
     <aside className="flex h-full w-64 flex-col bg-[#1A1A1A] text-white">
-      <div className="flex items-center gap-2 p-4">
-        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-chat-primary">
-          <FileText size={18} />
+      <div className="flex items-center justify-between p-4">
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-chat-primary">
+            <FileText size={18} />
+          </div>
+          <h1 className="text-xl font-bold">ChatPDF</h1>
         </div>
-        <h1 className="text-xl font-bold">ChatPDF</h1>
+        <ThemeToggle />
       </div>
       
       <div className="px-3 py-4">

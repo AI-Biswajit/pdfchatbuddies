@@ -3,7 +3,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { usePdf } from '@/context/PdfContext';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { ChevronLeft, ChevronRight, Minus, Plus, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Minus, Plus, Loader2, Search } from 'lucide-react';
+import { PdfSearch } from './PdfSearch';
 import * as pdfjs from 'pdfjs-dist';
 
 // Configure the worker source
@@ -52,14 +53,23 @@ export const PdfViewer: React.FC = () => {
         setPdfDocument(doc);
         setTotalPages(doc.numPages);
         setCurrentPage(1);
-        setIsLoading(false);
+        // We don't set isLoading to false here anymore, as we'll let the page rendering effect handle that
+        // However, if there's no pages, we should set isLoading to false
+        if (doc.numPages === 0) {
+          setIsLoading(false);
+          setProcessingError('The PDF document appears to be empty.');
+        }
       },
       (error) => {
         console.error('Error loading PDF:', error);
         setProcessingError('Failed to load the PDF document.');
         setIsLoading(false);
       }
-    );
+    ).catch(error => {
+      console.error('Unhandled error loading PDF:', error);
+      setProcessingError('Failed to load the PDF document.');
+      setIsLoading(false);
+    });
 
     // Cleanup
     return () => {
@@ -84,56 +94,68 @@ export const PdfViewer: React.FC = () => {
       renderTask.cancel();
     }
 
-    // Get the current page from the document
-    pdfDocument.getPage(currentPage).then(
-      (page) => {
-        const canvas = canvasRef.current;
-        if (!canvas) {
-          setIsLoading(false);
-          return;
-        }
-        
-        const context = canvas.getContext('2d');
-        if (!context) {
-          setIsLoading(false);
-          return;
-        }
-        
-        const viewport = page.getViewport({ scale: currentScale });
+    // Determine if this is the initial render after PDF load
+    const isInitialRender = currentPage === 1 && pdfDocument.numPages > 0;
+    
+    // Use a longer delay for initial render to ensure PDF is fully loaded
+    const delayTime = isInitialRender ? 200 : 50;
 
-        // Set canvas dimensions to match the viewport
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
-
-        // Render the page
-        const newRenderTask = page.render({
-          canvasContext: context,
-          viewport: viewport,
-        });
-
-        setRenderTask(newRenderTask);
-
-        newRenderTask.promise.then(
-          () => {
+    // Add a delay to ensure the PDF document is fully loaded
+    // This helps with the initial rendering of the first page
+    const timer = setTimeout(() => {
+      // Get the current page from the document
+      pdfDocument.getPage(currentPage).then(
+        (page) => {
+          const canvas = canvasRef.current;
+          if (!canvas) {
             setIsLoading(false);
-          },
-          (error) => {
-            if (error && error.name !== 'RenderingCancelledException') {
-              console.error('Error rendering PDF page:', error);
-              setProcessingError('Failed to render the PDF page.');
-            }
-            setIsLoading(false);
+            return;
           }
-        );
-      },
-      (error) => {
-        console.error('Error getting PDF page:', error);
-        setProcessingError('Failed to get the PDF page.');
-        setIsLoading(false);
-      }
-    );
+          
+          const context = canvas.getContext('2d');
+          if (!context) {
+            setIsLoading(false);
+            setProcessingError('Failed to get canvas context.');
+            return;
+          }
+          
+          const viewport = page.getViewport({ scale: currentScale });
+
+          // Set canvas dimensions to match the viewport
+          canvas.height = viewport.height;
+          canvas.width = viewport.width;
+
+          // Render the page
+          const newRenderTask = page.render({
+            canvasContext: context,
+            viewport: viewport,
+          });
+
+          setRenderTask(newRenderTask);
+
+          newRenderTask.promise.then(
+            () => {
+              setIsLoading(false);
+            },
+            (error) => {
+              if (error && error.name !== 'RenderingCancelledException') {
+                console.error('Error rendering PDF page:', error);
+                setProcessingError('Failed to render the PDF page.');
+              }
+              setIsLoading(false);
+            }
+          );
+        },
+        (error) => {
+          console.error('Error getting PDF page:', error);
+          setProcessingError('Failed to get the PDF page.');
+          setIsLoading(false);
+        }
+      );
+    }, delayTime); // Longer delay for initial render, shorter for subsequent pages
 
     return () => {
+      clearTimeout(timer);
       if (renderTask) {
         renderTask.cancel();
       }
@@ -166,7 +188,8 @@ export const PdfViewer: React.FC = () => {
     <div className="flex h-full flex-1 flex-col">
       {/* PDF Controls */}
       {pdfFile && (
-        <div className="flex items-center justify-between border-b border-chat-border bg-white p-3">
+        <>
+        <div className="flex items-center justify-between border-b border-chat-border bg-background p-3 pdf-controls">
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
@@ -219,6 +242,8 @@ export const PdfViewer: React.FC = () => {
             </Button>
           </div>
         </div>
+        <PdfSearch />
+        </>
       )}
       
       {/* PDF Viewer Area */}

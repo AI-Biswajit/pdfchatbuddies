@@ -70,9 +70,9 @@ export const ChatPanel: React.FC = () => {
 
   return (
     <ResizablePanel className="h-full" direction="horizontal" defaultSize={380} minSize={320} maxSize={600}>
-      <div className="flex h-full flex-col border-l border-chat-border bg-white">
+      <div className="flex h-full flex-col border-l border-chat-border dark:border-chat-dark-border bg-white dark:bg-background">
         {/* Chat Header */}
-        <div className="flex items-center justify-between border-b border-chat-border p-4">
+        <div className="flex items-center justify-between border-b border-chat-border dark:border-chat-dark-border p-4">
           <h2 className="text-lg font-semibold">Chat</h2>
         </div>
         
@@ -122,7 +122,7 @@ export const ChatPanel: React.FC = () => {
                       <span className="text-xs font-medium text-white">AI</span>
                     </div>
                     <div className="flex-1">
-                      <div className="rounded-lg rounded-tl-none bg-chat-ai p-4 shadow-sm">
+                      <div className="rounded-lg rounded-tl-none bg-chat-ai dark:bg-chat-dark-ai p-4 shadow-sm">
                         <p className="mb-4 text-base">Hey there! I'm excited to chat with you about this topic!</p>
                         <div className="space-y-2 text-sm">
                           <p>{summary.text}</p>
@@ -165,8 +165,8 @@ export const ChatPanel: React.FC = () => {
                     <div className={cn(
                       "max-w-[85%] rounded-lg p-4 shadow-sm",
                       message.sender === 'ai' 
-                        ? "bg-chat-ai rounded-tl-none" 
-                        : "bg-chat-user rounded-tr-none"
+                        ? "dark:bg-chat-dark-ai bg-chat-ai rounded-tl-none" 
+                        : "dark:bg-chat-dark-user bg-chat-user rounded-tr-none"
                     )}>
                       <p className="whitespace-pre-line">{message.text}</p>
                       
@@ -197,7 +197,7 @@ export const ChatPanel: React.FC = () => {
                     </div>
                     
                     {message.sender === 'user' && (
-                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gray-200">
+                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700">
                         <span className="text-xs font-medium">You</span>
                       </div>
                     )}
@@ -210,7 +210,7 @@ export const ChatPanel: React.FC = () => {
         </div>
         
         {/* Chat Input */}
-        <div className="chat-input-container border-t border-chat-border p-4">
+        <div className="chat-input-container border-t border-chat-border dark:border-chat-dark-border p-4 dark:bg-background">
           <div className="relative flex items-center">
             <Input
               ref={inputRef}

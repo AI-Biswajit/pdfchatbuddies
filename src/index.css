@@ -44,6 +44,36 @@
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 262 83.3% 74.5%;
   }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 262 83.3% 74.5%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 262 83.3% 74.5%;
+  }
 }
 
 @layer base {
@@ -110,8 +140,16 @@
   background-position: 50%;
 }
 
+.dark .gutter {
+  background-color: #2e2e3d;
+}
+
 .gutter:hover {
   background-color: #d1d1d1;
+}
+
+.dark .gutter:hover {
+  background-color: #3a3352;
 }
 
 .gutter.gutter-horizontal {
@@ -121,6 +159,13 @@
 
 .ai-message, .user-message, .suggestion-button, .pdf-controls {
   transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.dark .pdf-controls {
+  background-color: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+  border-color: hsl(var(--border));
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .chat-input-container {
@@ -133,4 +178,16 @@
 
 .pdf-page-loading {
   animation: pulse-soft 1.5s infinite;
+}
+
+@keyframes pulse-soft {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
 }

@@ -2,7 +2,7 @@
 import type { Config } from "tailwindcss";
 
 export default {
-	darkMode: ["class"],
+	darkMode: ["class", '[data-theme="dark"]'],
 	content: [
 		"./pages/**/*.{ts,tsx}",
 		"./components/**/*.{ts,tsx}",
@@ -49,6 +49,19 @@ export default {
 					DEFAULT: 'hsl(var(--popover))',
 					foreground: 'hsl(var(--popover-foreground))'
 				},
+				'chat-primary': {
+					DEFAULT: 'hsl(var(--primary))'
+				},
+				'chat-border': {
+					DEFAULT: 'hsl(var(--border))'
+				},
+				'chat-ai': {
+					DEFAULT: 'hsl(var(--muted))'
+				},
+				'chat-user': {
+					DEFAULT: 'hsl(var(--primary))',
+					foreground: 'hsl(var(--primary-foreground))'
+				},
 				card: {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
@@ -69,6 +82,11 @@ export default {
 					user: '#f1f0fb',
 					ai: '#ffffff',
 					border: '#e5e5e6',
+					dark: {
+						user: '#3a3352',
+						ai: '#1e1e2d',
+						border: '#2e2e3d'
+					}
 				}
 			},
 			borderRadius: {

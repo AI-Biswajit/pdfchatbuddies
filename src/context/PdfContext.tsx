@@ -7,6 +7,7 @@ import {
   PdfSummary,
   PdfContextType
 } from '@/types';
+import { extractTextFromPdf } from '@/utils/pdfUtils';
 
 const PdfContext = createContext<PdfContextType | undefined>(undefined);
 
@@ -19,6 +20,7 @@ export const PdfProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [summary, setSummary] = useState<PdfSummary | null>(null);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [currentScale, setCurrentScale] = useState<number>(1.0);
+  const [extractedText, setExtractedText] = useState<string>('');
 
   const addChatMessage = (message: Omit<ChatMessage, 'id' | 'timestamp'>) => {
     const newMessage: ChatMessage = {
@@ -49,7 +51,9 @@ export const PdfProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setChatMessages,
         addChatMessage,
         currentScale,
-        setCurrentScale
+        setCurrentScale,
+        extractedText,
+        setExtractedText
       }}
     >
       {children}
