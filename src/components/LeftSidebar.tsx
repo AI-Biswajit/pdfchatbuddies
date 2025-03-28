@@ -7,6 +7,14 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { FileText, FolderPlus, LogIn, Settings, Plus } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarHeader,
+  SidebarProvider,
+} from '@/components/ui/sidebar';
 
 export const LeftSidebar: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -93,69 +101,77 @@ export const LeftSidebar: React.FC = () => {
   };
 
   return (
-    <aside className="flex h-full w-64 flex-col bg-[#1A1A1A] text-white">
-      <div className="flex items-center justify-between p-4">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-chat-primary">
-            <FileText size={18} />
+    <Sidebar>
+      <SidebarHeader>
+        <div className="flex items-center justify-between p-2">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-chat-primary">
+              <FileText size={18} />
+            </div>
+            <h1 className="text-xl font-bold">ChatPDF</h1>
           </div>
-          <h1 className="text-xl font-bold">ChatPDF</h1>
+          <ThemeToggle />
         </div>
-        <ThemeToggle />
-      </div>
+      </SidebarHeader>
       
-      <div className="px-3 py-4">
-        <Button 
-          onClick={handleNewChat}
-          className="w-full justify-start gap-2 bg-white/10 hover:bg-white/20"
-          variant="ghost"
-        >
-          <Plus size={16} />
-          New Chat
-        </Button>
-      </div>
-      
-      <div className="px-3">
-        <Button
-          onClick={() => fileInputRef.current?.click()}
-          className="w-full justify-start gap-2 bg-chat-primary text-white hover:bg-chat-primary/90"
-        >
-          <FileText size={16} />
-          Upload PDF
-        </Button>
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          accept=".pdf"
-          className="hidden"
-        />
-      </div>
-      
-      {pdfFile && (
-        <div className="mt-4 px-4">
-          <p className="text-xs text-white/50">CURRENT DOCUMENT</p>
-          <div className="mt-2 flex items-center gap-2 rounded-md bg-white/10 p-2 text-sm">
-            <FileText size={14} className="text-chat-primary" />
-            <span className="truncate">{pdfFile.name}</span>
+      <SidebarContent>
+        <SidebarGroup>
+          <div className="px-3 py-2">
+            <Button 
+              onClick={handleNewChat}
+              className="w-full justify-start gap-2 bg-white/10 hover:bg-white/20"
+              variant="ghost"
+            >
+              <Plus size={16} />
+              New Chat
+            </Button>
           </div>
-        </div>
-      )}
+          
+          <div className="px-3 py-2">
+            <Button
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full justify-start gap-2 bg-chat-primary text-white hover:bg-chat-primary/90"
+            >
+              <FileText size={16} />
+              Upload PDF
+            </Button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept=".pdf"
+              className="hidden"
+            />
+          </div>
+          
+          {pdfFile && (
+            <div className="mt-4 px-4">
+              <p className="text-xs text-sidebar-foreground/50">CURRENT DOCUMENT</p>
+              <div className="mt-2 flex items-center gap-2 rounded-md bg-sidebar-accent p-2 text-sm">
+                <FileText size={14} className="text-chat-primary" />
+                <span className="truncate">{pdfFile.name}</span>
+              </div>
+            </div>
+          )}
+        </SidebarGroup>
+      </SidebarContent>
       
-      <div className="mt-auto px-3 py-4">
-        <Button variant="ghost" className="w-full justify-start gap-2 text-white/70 hover:text-white">
-          <FolderPlus size={16} />
-          New Folder
-        </Button>
-        <Button variant="ghost" className="w-full justify-start gap-2 text-white/70 hover:text-white">
-          <Settings size={16} />
-          Settings
-        </Button>
-        <Button variant="ghost" className="w-full justify-start gap-2 text-white/70 hover:text-white">
-          <LogIn size={16} />
-          Sign in
-        </Button>
-      </div>
-    </aside>
+      <SidebarFooter>
+        <div className="px-3 py-2">
+          <Button variant="ghost" className="w-full justify-start gap-2 text-sidebar-foreground/70 hover:text-sidebar-foreground">
+            <FolderPlus size={16} />
+            New Folder
+          </Button>
+          <Button variant="ghost" className="w-full justify-start gap-2 text-sidebar-foreground/70 hover:text-sidebar-foreground">
+            <Settings size={16} />
+            Settings
+          </Button>
+          <Button variant="ghost" className="w-full justify-start gap-2 text-sidebar-foreground/70 hover:text-sidebar-foreground">
+            <LogIn size={16} />
+            Sign in
+          </Button>
+        </div>
+      </SidebarFooter>
+    </Sidebar>
   );
 };

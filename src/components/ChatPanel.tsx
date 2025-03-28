@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SuggestionPrompt } from '@/types';
 import { getAiResponse } from '@/utils/mockData';
-import { ResizablePanel } from './ResizablePanel';
 import { cn } from '@/lib/utils';
 import { Send, ListChecks, ThumbsUp, ThumbsDown, Copy, Volume2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -69,174 +68,172 @@ export const ChatPanel: React.FC = () => {
   }, [chatMessages]);
 
   return (
-    <ResizablePanel className="h-full" direction="horizontal" defaultSize={380} minSize={320} maxSize={600}>
-      <div className="flex h-full flex-col border-l border-chat-border dark:border-chat-dark-border bg-white dark:bg-background">
-        {/* Chat Header */}
-        <div className="flex items-center justify-between border-b border-chat-border dark:border-chat-dark-border p-4">
-          <h2 className="text-lg font-semibold">Chat</h2>
-        </div>
-        
-        {/* Chat Messages */}
-        <div className="scrollbar-thin flex-1 overflow-y-auto p-4">
-          {!pdfFile ? (
-            <div className="flex h-full flex-col items-center justify-center text-center p-4">
-              <div className="mb-6 rounded-full bg-chat-primary/10 p-4">
-                <FileTextIcon className="h-8 w-8 text-chat-primary" />
-              </div>
-              <h3 className="mb-2 text-xl font-semibold">Upload a PDF to start</h3>
-              <p className="mb-6 text-muted-foreground">
-                Chat with your document by uploading a PDF file first.
-              </p>
+    <div className="flex h-full flex-col bg-white dark:bg-background border-l border-chat-border dark:border-chat-dark-border">
+      {/* Chat Header */}
+      <div className="flex items-center justify-between border-b border-chat-border dark:border-chat-dark-border p-4">
+        <h2 className="text-lg font-semibold">Chat</h2>
+      </div>
+      
+      {/* Chat Messages */}
+      <div className="scrollbar-thin flex-1 overflow-y-auto p-4">
+        {!pdfFile ? (
+          <div className="flex h-full flex-col items-center justify-center text-center p-4">
+            <div className="mb-6 rounded-full bg-chat-primary/10 p-4">
+              <FileTextIcon className="h-8 w-8 text-chat-primary" />
             </div>
-          ) : isProcessing ? (
-            <div className="flex h-full flex-col items-center justify-center text-center p-4">
-              <div className="animate-pulse mb-6 rounded-full bg-chat-primary/10 p-4">
-                <ListChecks className="h-8 w-8 text-chat-primary" />
-              </div>
-              <h3 className="mb-2 text-xl font-semibold">Analyzing PDF</h3>
-              <p className="mb-6 text-muted-foreground">
-                Please wait while we process your document...
-              </p>
-              <div className="h-2 w-40 rounded-full bg-gray-200 overflow-hidden">
-                <div className="h-full bg-chat-primary animate-pulse-soft" style={{ width: '70%' }}></div>
-              </div>
+            <h3 className="mb-2 text-xl font-semibold">Upload a PDF to start</h3>
+            <p className="mb-6 text-muted-foreground">
+              Chat with your document by uploading a PDF file first.
+            </p>
+          </div>
+        ) : isProcessing ? (
+          <div className="flex h-full flex-col items-center justify-center text-center p-4">
+            <div className="animate-pulse mb-6 rounded-full bg-chat-primary/10 p-4">
+              <ListChecks className="h-8 w-8 text-chat-primary" />
             </div>
-          ) : processingError ? (
-            <div className="flex h-full flex-col items-center justify-center text-center p-4">
-              <div className="mb-6 rounded-full bg-red-100 p-4">
-                <AlertCircleIcon className="h-8 w-8 text-red-500" />
-              </div>
-              <h3 className="mb-2 text-xl font-semibold text-red-500">Error</h3>
-              <p className="mb-6 text-muted-foreground">{processingError}</p>
-              <Button variant="outline" onClick={() => window.location.reload()}>
-                Try Again
-              </Button>
+            <h3 className="mb-2 text-xl font-semibold">Analyzing PDF</h3>
+            <p className="mb-6 text-muted-foreground">
+              Please wait while we process your document...
+            </p>
+            <div className="h-2 w-40 rounded-full bg-gray-200 overflow-hidden">
+              <div className="h-full bg-chat-primary animate-pulse-soft" style={{ width: '70%' }}></div>
             </div>
-          ) : (
-            <>
-              {/* Summary - shown when chat is empty */}
-              {chatMessages.length === 0 && summary && (
-                <div className="mb-6 animate-fade-in">
-                  <div className="mb-4 flex items-start gap-3">
+          </div>
+        ) : processingError ? (
+          <div className="flex h-full flex-col items-center justify-center text-center p-4">
+            <div className="mb-6 rounded-full bg-red-100 p-4">
+              <AlertCircleIcon className="h-8 w-8 text-red-500" />
+            </div>
+            <h3 className="mb-2 text-xl font-semibold text-red-500">Error</h3>
+            <p className="mb-6 text-muted-foreground">{processingError}</p>
+            <Button variant="outline" onClick={() => window.location.reload()}>
+              Try Again
+            </Button>
+          </div>
+        ) : (
+          <>
+            {/* Summary - shown when chat is empty */}
+            {chatMessages.length === 0 && summary && (
+              <div className="mb-6 animate-fade-in">
+                <div className="mb-4 flex items-start gap-3">
+                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-chat-primary">
+                    <span className="text-xs font-medium text-white">AI</span>
+                  </div>
+                  <div className="flex-1">
+                    <div className="rounded-lg rounded-tl-none bg-chat-ai dark:bg-chat-dark-ai p-4 shadow-sm">
+                      <p className="mb-4 text-base">Hey there! I'm excited to chat with you about this topic!</p>
+                      <div className="space-y-2 text-sm">
+                        <p>{summary.text}</p>
+                        <p className="mt-4">I've read through all 22 pages and I'm here to help you with it!</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Suggested prompts */}
+                <div className="mt-6 space-y-2">
+                  <p className="mb-3 text-xs font-medium text-muted-foreground">SUGGESTED QUESTIONS</p>
+                  {summary.suggestions.map((suggestion) => (
+                    <Button
+                      key={suggestion.id}
+                      variant="outline"
+                      className="w-full justify-start bg-transparent text-left hover:bg-chat-primary/5"
+                      onClick={() => handleSuggestionClick(suggestion)}
+                    >
+                      <span className="mr-2 text-chat-primary">•</span>
+                      {suggestion.text}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Conversation Messages */}
+            <div className="space-y-6">
+              {chatMessages.map((message) => (
+                <div key={message.id} className={cn("flex items-start gap-3 animate-slide-in", 
+                  message.sender === 'user' ? "justify-end" : ""
+                )}>
+                  {message.sender === 'ai' && (
                     <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-chat-primary">
                       <span className="text-xs font-medium text-white">AI</span>
                     </div>
-                    <div className="flex-1">
-                      <div className="rounded-lg rounded-tl-none bg-chat-ai dark:bg-chat-dark-ai p-4 shadow-sm">
-                        <p className="mb-4 text-base">Hey there! I'm excited to chat with you about this topic!</p>
-                        <div className="space-y-2 text-sm">
-                          <p>{summary.text}</p>
-                          <p className="mt-4">I've read through all 22 pages and I'm here to help you with it!</p>
-                        </div>
+                  )}
+                  
+                  <div className={cn(
+                    "max-w-[85%] rounded-lg p-4 shadow-sm",
+                    message.sender === 'ai' 
+                      ? "dark:bg-chat-dark-ai bg-chat-ai rounded-tl-none" 
+                      : "dark:bg-chat-dark-user bg-chat-user rounded-tr-none"
+                  )}>
+                    <p className="whitespace-pre-line">{message.text}</p>
+                    
+                    {message.sender === 'ai' && (
+                      <div className="mt-2 flex items-center gap-1 pt-1 text-muted-foreground">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-6 w-6"
+                          onClick={() => {
+                            navigator.clipboard.writeText(message.text);
+                            toast.success('Copied to clipboard');
+                          }}
+                        >
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-6 w-6">
+                          <Volume2 className="h-3 w-3" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-6 w-6">
+                          <ThumbsUp className="h-3 w-3" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-6 w-6">
+                          <ThumbsDown className="h-3 w-3" />
+                        </Button>
                       </div>
-                    </div>
+                    )}
                   </div>
                   
-                  {/* Suggested prompts */}
-                  <div className="mt-6 space-y-2">
-                    <p className="mb-3 text-xs font-medium text-muted-foreground">SUGGESTED QUESTIONS</p>
-                    {summary.suggestions.map((suggestion) => (
-                      <Button
-                        key={suggestion.id}
-                        variant="outline"
-                        className="w-full justify-start bg-transparent text-left hover:bg-chat-primary/5"
-                        onClick={() => handleSuggestionClick(suggestion)}
-                      >
-                        <span className="mr-2 text-chat-primary">•</span>
-                        {suggestion.text}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              
-              {/* Conversation Messages */}
-              <div className="space-y-6">
-                {chatMessages.map((message) => (
-                  <div key={message.id} className={cn("flex items-start gap-3 animate-slide-in", 
-                    message.sender === 'user' ? "justify-end" : ""
-                  )}>
-                    {message.sender === 'ai' && (
-                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-chat-primary">
-                        <span className="text-xs font-medium text-white">AI</span>
-                      </div>
-                    )}
-                    
-                    <div className={cn(
-                      "max-w-[85%] rounded-lg p-4 shadow-sm",
-                      message.sender === 'ai' 
-                        ? "dark:bg-chat-dark-ai bg-chat-ai rounded-tl-none" 
-                        : "dark:bg-chat-dark-user bg-chat-user rounded-tr-none"
-                    )}>
-                      <p className="whitespace-pre-line">{message.text}</p>
-                      
-                      {message.sender === 'ai' && (
-                        <div className="mt-2 flex items-center gap-1 pt-1 text-muted-foreground">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-6 w-6"
-                            onClick={() => {
-                              navigator.clipboard.writeText(message.text);
-                              toast.success('Copied to clipboard');
-                            }}
-                          >
-                            <Copy className="h-3 w-3" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-6 w-6">
-                            <Volume2 className="h-3 w-3" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-6 w-6">
-                            <ThumbsUp className="h-3 w-3" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-6 w-6">
-                            <ThumbsDown className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      )}
+                  {message.sender === 'user' && (
+                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700">
+                      <span className="text-xs font-medium">You</span>
                     </div>
-                    
-                    {message.sender === 'user' && (
-                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700">
-                        <span className="text-xs font-medium">You</span>
-                      </div>
-                    )}
-                  </div>
-                ))}
-                <div ref={messagesEndRef} />
-              </div>
-            </>
-          )}
-        </div>
-        
-        {/* Chat Input */}
-        <div className="chat-input-container border-t border-chat-border dark:border-chat-dark-border p-4 dark:bg-background">
-          <div className="relative flex items-center">
-            <Input
-              ref={inputRef}
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={handleKeyPress}
-              placeholder="Ask any question..."
-              className="pr-10"
-              disabled={!pdfFile || isProcessing || !!processingError}
-            />
-            <Button
-              type="submit"
-              size="icon"
-              className="absolute right-1 h-8 w-8"
-              onClick={() => handleSendMessage()}
-              disabled={!inputValue.trim() || !pdfFile || isProcessing || !!processingError}
-            >
-              <Send className="h-4 w-4" />
-            </Button>
-          </div>
-          <p className="mt-2 text-center text-xs text-muted-foreground">
-            AI can make mistakes. Verify important information.
-          </p>
-        </div>
+                  )}
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+          </>
+        )}
       </div>
-    </ResizablePanel>
+      
+      {/* Chat Input */}
+      <div className="chat-input-container border-t border-chat-border dark:border-chat-dark-border p-4 dark:bg-background">
+        <div className="relative flex items-center">
+          <Input
+            ref={inputRef}
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={handleKeyPress}
+            placeholder="Ask any question..."
+            className="pr-10"
+            disabled={!pdfFile || isProcessing || !!processingError}
+          />
+          <Button
+            type="submit"
+            size="icon"
+            className="absolute right-1 h-8 w-8"
+            onClick={() => handleSendMessage()}
+            disabled={!inputValue.trim() || !pdfFile || isProcessing || !!processingError}
+          >
+            <Send className="h-4 w-4" />
+          </Button>
+        </div>
+        <p className="mt-2 text-center text-xs text-muted-foreground">
+          AI can make mistakes. Verify important information.
+        </p>
+      </div>
+    </div>
   );
 };
 
