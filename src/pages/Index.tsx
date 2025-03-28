@@ -25,7 +25,7 @@ const Index: React.FC = () => {
         <MobileLayout />
       ) : (
         <SidebarProvider defaultOpen={true}>
-          <div className="flex h-screen w-full overflow-hidden">
+          <div className="flex h-screen w-full overflow-hidden bg-sidebar">
             <LeftSidebar />
             <SidebarInset>
               <ResizablePanelGroup direction="horizontal" className="w-full h-full">
@@ -33,7 +33,7 @@ const Index: React.FC = () => {
                   defaultSize={65} 
                   minSize={30} 
                   maxSize={80} 
-                  className="transition-all overflow-hidden"
+                  className="transition-all overflow-hidden bg-background"
                 >
                   <PdfViewer />
                 </ResizablePanel>
@@ -42,7 +42,7 @@ const Index: React.FC = () => {
                   defaultSize={35} 
                   minSize={20} 
                   maxSize={70} 
-                  className="transition-all overflow-hidden"
+                  className="transition-all overflow-hidden bg-background"
                 >
                   <ChatPanel />
                 </ResizablePanel>

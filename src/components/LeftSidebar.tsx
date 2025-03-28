@@ -13,7 +13,9 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarHeader,
-  SidebarProvider,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
 } from '@/components/ui/sidebar';
 
 export const LeftSidebar: React.FC = () => {
@@ -106,7 +108,7 @@ export const LeftSidebar: React.FC = () => {
         <div className="flex items-center justify-between p-2">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-md bg-chat-primary">
-              <FileText size={18} />
+              <FileText size={18} className="text-white" />
             </div>
             <h1 className="text-xl font-bold">ChatPDF</h1>
           </div>
@@ -116,33 +118,34 @@ export const LeftSidebar: React.FC = () => {
       
       <SidebarContent>
         <SidebarGroup>
-          <div className="px-3 py-2">
-            <Button 
-              onClick={handleNewChat}
-              className="w-full justify-start gap-2 bg-white/10 hover:bg-white/20"
-              variant="ghost"
-            >
-              <Plus size={16} />
-              New Chat
-            </Button>
-          </div>
-          
-          <div className="px-3 py-2">
-            <Button
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full justify-start gap-2 bg-chat-primary text-white hover:bg-chat-primary/90"
-            >
-              <FileText size={16} />
-              Upload PDF
-            </Button>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              accept=".pdf"
-              className="hidden"
-            />
-          </div>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton 
+                onClick={handleNewChat}
+                className="justify-start gap-2 bg-white/10 hover:bg-white/20 w-full"
+              >
+                <Plus size={16} />
+                <span>New Chat</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={() => fileInputRef.current?.click()}
+                className="justify-start gap-2 bg-chat-primary text-white hover:bg-chat-primary/90 w-full"
+              >
+                <FileText size={16} />
+                <span>Upload PDF</span>
+              </SidebarMenuButton>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept=".pdf"
+                className="hidden"
+              />
+            </SidebarMenuItem>
+          </SidebarMenu>
           
           {pdfFile && (
             <div className="mt-4 px-4">
@@ -157,20 +160,26 @@ export const LeftSidebar: React.FC = () => {
       </SidebarContent>
       
       <SidebarFooter>
-        <div className="px-3 py-2">
-          <Button variant="ghost" className="w-full justify-start gap-2 text-sidebar-foreground/70 hover:text-sidebar-foreground">
-            <FolderPlus size={16} />
-            New Folder
-          </Button>
-          <Button variant="ghost" className="w-full justify-start gap-2 text-sidebar-foreground/70 hover:text-sidebar-foreground">
-            <Settings size={16} />
-            Settings
-          </Button>
-          <Button variant="ghost" className="w-full justify-start gap-2 text-sidebar-foreground/70 hover:text-sidebar-foreground">
-            <LogIn size={16} />
-            Sign in
-          </Button>
-        </div>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton className="justify-start gap-2 text-sidebar-foreground/70 hover:text-sidebar-foreground w-full">
+              <FolderPlus size={16} />
+              <span>New Folder</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton className="justify-start gap-2 text-sidebar-foreground/70 hover:text-sidebar-foreground w-full">
+              <Settings size={16} />
+              <span>Settings</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton className="justify-start gap-2 text-sidebar-foreground/70 hover:text-sidebar-foreground w-full">
+              <LogIn size={16} />
+              <span>Sign in</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
   );

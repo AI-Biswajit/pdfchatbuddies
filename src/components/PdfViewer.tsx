@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { usePdf } from '@/context/PdfContext';
 import { Button } from '@/components/ui/button';
@@ -18,6 +17,7 @@ export const PdfViewer: React.FC = () => {
   const [renderError, setRenderError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [isRendering, setIsRendering] = useState(false);
+  const [displayScale, setDisplayScale] = useState(100);
 
   const {
     pdfFile,
@@ -31,20 +31,17 @@ export const PdfViewer: React.FC = () => {
     loadState
   } = usePdf();
 
-  // Load PDF document when file changes or when retrying
   useEffect(() => {
     if (!pdfFile || loadState !== 'success') return;
 
     setIsLoading(true);
     setRenderError(null);
     
-    // Cancel any ongoing render task
     if (renderTask) {
       renderTask.cancel();
       setRenderTask(null);
     }
     
-    // Clean up previous PDF document
     if (pdfDocument) {
       pdfDocument.destroy().catch(err => console.error("Error destroying PDF document:", err));
       setPdfDocument(null);
@@ -96,7 +93,6 @@ export const PdfViewer: React.FC = () => {
       toast.error(errorMsg);
     });
 
-    // Cleanup
     return () => {
       if (renderTask) {
         renderTask.cancel();
@@ -108,7 +104,10 @@ export const PdfViewer: React.FC = () => {
     };
   }, [pdfFile, retryCount, loadState]);
 
-  // Render PDF page when page or scale changes
+  useEffect(() => {
+    setDisplayScale(Math.round(currentScale * 100));
+  }, [currentScale]);
+
   useEffect(() => {
     if (!pdfDocument || !canvasRef.current) {
       return;
@@ -117,13 +116,11 @@ export const PdfViewer: React.FC = () => {
     setIsRendering(true);
     setRenderError(null);
     
-    // Cancel any ongoing render task
     if (renderTask) {
       renderTask.cancel();
       setRenderTask(null);
     }
 
-    // Get the current page from the document
     pdfDocument.getPage(currentPage).then(
       (page) => {
         const canvas = canvasRef.current;
@@ -140,13 +137,17 @@ export const PdfViewer: React.FC = () => {
           return;
         }
         
+        const pixelRatio = window.devicePixelRatio || 1;
         const viewport = page.getViewport({ scale: currentScale });
+        
+        canvas.width = Math.floor(viewport.width * pixelRatio);
+        canvas.height = Math.floor(viewport.height * pixelRatio);
+        
+        canvas.style.width = `${Math.floor(viewport.width)}px`;
+        canvas.style.height = `${Math.floor(viewport.height)}px`;
+        
+        context.scale(pixelRatio, pixelRatio);
 
-        // Set canvas dimensions to match the viewport
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
-
-        // Render the page
         const newRenderTask = page.render({
           canvasContext: context,
           viewport: viewport,
@@ -221,7 +222,6 @@ export const PdfViewer: React.FC = () => {
 
   return (
     <div className="flex h-full flex-1 flex-col">
-      {/* PDF Controls */}
       {pdfFile && !renderError && loadState === 'success' && (
         <>
         <div className="flex items-center justify-between border-b border-chat-border bg-background p-3 pdf-controls">
@@ -263,7 +263,7 @@ export const PdfViewer: React.FC = () => {
             </Button>
             
             <span className="text-sm">
-              {Math.round(currentScale * 100)}%
+              {displayScale}%
             </span>
             
             <Button
@@ -281,7 +281,6 @@ export const PdfViewer: React.FC = () => {
         </>
       )}
       
-      {/* PDF Viewer Area */}
       <div
         ref={containerRef}
         className="flex-1 overflow-auto bg-gray-100 dark:bg-gray-800 p-4 flex justify-center items-center"
