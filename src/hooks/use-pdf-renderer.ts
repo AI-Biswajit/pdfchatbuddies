@@ -13,7 +13,9 @@ export const usePdfRenderer = () => {
   const [renderError, setRenderError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [displayScale, setDisplayScale] = useState(100);
+  const [fitToWidth, setFitToWidth] = useState(false);
 
   const {
     pdfFile,
@@ -21,6 +23,7 @@ export const usePdfRenderer = () => {
     totalPages,
     setTotalPages,
     currentScale,
+    setCurrentScale,
     setProcessingError,
     loadState
   } = usePdf();
@@ -98,9 +101,33 @@ export const usePdfRenderer = () => {
     };
   }, [pdfFile, retryCount, loadState, setProcessingError, setTotalPages]);
 
+  // Calculate fit-to-width scale when document or container changes
+  useEffect(() => {
+    if (fitToWidth && pdfDocument && containerRef.current) {
+      const calculateFitToWidth = async () => {
+        try {
+          const page = await pdfDocument.getPage(currentPage);
+          const viewport = page.getViewport({ scale: 1.0 });
+          const containerWidth = containerRef.current?.parentElement?.clientWidth || 1000;
+          // Account for padding
+          const availableWidth = containerWidth - 32; // 16px padding on each side
+          const scale = availableWidth / viewport.width;
+          
+          setCurrentScale(scale);
+        } catch (error) {
+          console.error('Error calculating fit-to-width scale:', error);
+        }
+      };
+      
+      calculateFitToWidth();
+    }
+  }, [pdfDocument, fitToWidth, containerRef, currentPage, setCurrentScale]);
+
   // Update display scale when currentScale changes
   useEffect(() => {
-    setDisplayScale(Math.round(currentScale * 100));
+    // Calculate the true display scale considering device pixel ratio
+    const pixelRatio = window.devicePixelRatio || 1;
+    setDisplayScale(Math.round(currentScale * 100 / pixelRatio));
   }, [currentScale]);
 
   // Render PDF page when document, page or scale changes
@@ -196,12 +223,19 @@ export const usePdfRenderer = () => {
     toast.info("Retrying PDF load...");
   };
 
+  const toggleFitToWidth = () => {
+    setFitToWidth(!fitToWidth);
+  };
+
   return {
     canvasRef,
+    containerRef,
     isLoading,
     isRendering,
     renderError,
     displayScale,
+    fitToWidth,
+    toggleFitToWidth,
     handleRetry
   };
 };

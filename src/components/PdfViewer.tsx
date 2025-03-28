@@ -1,5 +1,5 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { usePdf } from '@/context/PdfContext';
 import { usePdfRenderer } from '@/hooks/use-pdf-renderer';
 import { PdfControls } from './PdfControls';
@@ -10,17 +10,39 @@ import { PdfErrorState } from './PdfErrorState';
 import { PdfCanvas } from './PdfCanvas';
 
 export const PdfViewer: React.FC = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const viewerContainerRef = useRef<HTMLDivElement>(null);
   const { pdfFile, loadState } = usePdf();
   
   const {
     canvasRef,
+    containerRef,
     isLoading,
     isRendering,
     renderError,
     displayScale,
+    fitToWidth,
+    toggleFitToWidth,
     handleRetry
   } = usePdfRenderer();
+
+  // Handle viewer container resize for fit-to-width
+  useEffect(() => {
+    if (!viewerContainerRef.current) return;
+    
+    const resizeObserver = new ResizeObserver(() => {
+      if (fitToWidth) {
+        // Force a re-calculation of the fit-to-width scale
+        toggleFitToWidth();
+        toggleFitToWidth();
+      }
+    });
+    
+    resizeObserver.observe(viewerContainerRef.current);
+    
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [fitToWidth, toggleFitToWidth]);
 
   return (
     <div className="flex h-full flex-1 flex-col">
@@ -29,14 +51,16 @@ export const PdfViewer: React.FC = () => {
           <PdfControls 
             displayScale={displayScale} 
             isRendering={isRendering} 
+            fitToWidth={fitToWidth}
+            onToggleFitToWidth={toggleFitToWidth}
           />
           {!renderError && <PdfSearch />}
         </>
       )}
       
       <div
-        ref={containerRef}
-        className="flex-1 overflow-auto bg-gray-100 dark:bg-gray-800 p-4 flex justify-center items-center"
+        ref={viewerContainerRef}
+        className="flex-1 overflow-auto bg-gray-100 dark:bg-gray-800 p-4 flex justify-center items-start"
       >
         {!pdfFile ? (
           <PdfEmptyState />
@@ -50,7 +74,8 @@ export const PdfViewer: React.FC = () => {
         ) : (
           <PdfCanvas 
             canvasRef={canvasRef} 
-            isRendering={isRendering} 
+            isRendering={isRendering}
+            containerRef={containerRef}
           />
         )}
       </div>
