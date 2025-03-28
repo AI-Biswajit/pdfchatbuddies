@@ -8,10 +8,12 @@ import {
   Minus, 
   Plus, 
   Maximize,
-  RotateCcw
+  RotateCcw,
+  PanelLeft
 } from 'lucide-react';
 import { usePdf } from '@/context/PdfContext';
 import { toast } from 'sonner';
+import { useSidebar } from '@/components/ui/sidebar';
 
 interface PdfControlsProps {
   displayScale: number;
@@ -33,6 +35,7 @@ export const PdfControls: React.FC<PdfControlsProps> = ({
     currentScale,
     setCurrentScale
   } = usePdf();
+  const { toggleSidebar } = useSidebar();
 
   const [pageInput, setPageInput] = useState<string>(currentPage.toString());
 
@@ -93,6 +96,16 @@ export const PdfControls: React.FC<PdfControlsProps> = ({
   return (
     <div className="flex flex-wrap items-center justify-between border-b border-chat-border bg-background p-3 pdf-controls gap-2">
       <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={toggleSidebar}
+          className="h-8 w-8 mr-2"
+          title="Toggle Sidebar"
+        >
+          <PanelLeft className="h-4 w-4" />
+        </Button>
+        
         <Button
           variant="outline"
           size="icon"

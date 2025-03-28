@@ -125,9 +125,9 @@ export const usePdfRenderer = () => {
 
   // Update display scale when currentScale changes
   useEffect(() => {
-    // Calculate the true display scale considering device pixel ratio
-    const pixelRatio = window.devicePixelRatio || 1;
-    setDisplayScale(Math.round(currentScale * 100 / pixelRatio));
+    // Display the actual scale percentage without adjusting for pixel ratio
+    // This ensures the displayed percentage matches what was set in PdfContext
+    setDisplayScale(Math.round(currentScale * 100));
   }, [currentScale]);
 
   // Render PDF page when document, page or scale changes

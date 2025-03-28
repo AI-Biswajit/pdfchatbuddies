@@ -21,7 +21,7 @@ export const PdfProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [processingError, setProcessingError] = useState<string | null>(null);
   const [summary, setSummary] = useState<PdfSummary | null>(null);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [currentScale, setCurrentScale] = useState<number>(1.0);
+  const [currentScale, setCurrentScale] = useState<number>(0.78);
   const [extractedText, setExtractedText] = useState<string>('');
   const [loadState, setLoadState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
