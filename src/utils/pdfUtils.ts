@@ -1,11 +1,11 @@
+
 import * as pdfjs from 'pdfjs-dist';
 
-// Initialize PDF.js worker properly
+// Load and configure the PDF.js worker once on startup
 const pdfjsVersion = pdfjs.version;
-if (!pdfjs.GlobalWorkerOptions.workerSrc) {
-  // Use CDN worker to avoid issues with blob URLs
-  pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsVersion}/pdf.worker.min.js`;
-}
+
+// Ensure we're using the correct worker
+pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsVersion}/pdf.worker.min.js`;
 
 /**
  * Extract text content from a PDF file
@@ -14,17 +14,19 @@ if (!pdfjs.GlobalWorkerOptions.workerSrc) {
  */
 export const extractTextFromPdf = async (pdfUrl: string): Promise<string> => {
   try {
-    // Create a new loading task with proper configuration
+    // Create a new loading task with proper configuration for blob URLs
     const loadingTask = pdfjs.getDocument({
       url: pdfUrl,
       cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjsVersion}/cmaps/`,
       cMapPacked: true,
       enableXfa: true, // Enable XFA forms for better compatibility
-      disableRange: true, // Disable range requests which can cause issues with blob URLs
-      disableStream: true, // Disable streaming for better blob URL handling
+      disableRange: false, // Enable range requests for better performance
+      disableStream: false, // Enable streaming for better performance
     });
     
+    console.log("PDF extraction started for:", pdfUrl);
     const pdf = await loadingTask.promise;
+    console.log("PDF loaded successfully with", pdf.numPages, "pages");
     
     let fullText = '';
     

@@ -40,15 +40,18 @@ export const LeftSidebar: React.FC = () => {
       const objectUrl = URL.createObjectURL(file);
       console.log("Created object URL:", objectUrl);
       
-      // Set the PDF file object first
-      setPdfFile({
+      // Set the PDF file object with the file name and URL
+      const pdfFileObj = {
         name: file.name,
         url: objectUrl,
-      });
-
-      toast.info('Analyzing PDF & Generating Summary...');
+      };
       
-      // Extract text from PDF in the background
+      toast.info('Loading PDF file...');
+      
+      // First set the PDF file to trigger loading
+      await setPdfFile(pdfFileObj);
+      
+      // Try to extract text in the background after PDF is loaded
       setTimeout(async () => {
         try {
           const text = await extractTextFromPdf(objectUrl);
@@ -61,11 +64,11 @@ export const LeftSidebar: React.FC = () => {
           toast.success('PDF processed successfully!');
         } catch (error) {
           console.error('Error extracting text from PDF:', error);
-          toast.error('Warning: Could not extract text from PDF. Some features may be limited.');
+          toast.warning('Could not extract text from PDF. Some features may be limited.');
         } finally {
           setIsProcessing(false);
         }
-      }, 500); // Slightly longer timeout to ensure PDF viewer has time to initialize
+      }, 1000);
     } catch (error) {
       console.error('Error processing PDF:', error);
       setProcessingError('Failed to process the document.');

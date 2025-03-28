@@ -41,4 +41,5 @@ export interface PdfContextType {
   setCurrentScale: (scale: number) => void;
   extractedText: string;
   setExtractedText: (text: string) => void;
+  loadState: 'idle' | 'loading' | 'success' | 'error';
 }
