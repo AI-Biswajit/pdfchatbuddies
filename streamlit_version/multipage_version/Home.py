@@ -42,10 +42,10 @@ def display_pdf(file_path):
     with open(file_path, "rb") as f:
         base64_pdf = base64.b64encode(f.read()).decode('utf-8')
     
-    # Embed PDF viewer with page controls
+    # Embed PDF viewer without page controls
     pdf_display = f"""
     <iframe
-        src="data:application/pdf;base64,{base64_pdf}#page={st.session_state.current_page}"
+        src="data:application/pdf;base64,{base64_pdf}"
         width="100%"
         height="600"
         style="border: none;">
@@ -83,34 +83,7 @@ with st.sidebar:
 st.title("PDF Viewer")
 
 if st.session_state.pdf_file:
-    # PDF controls
-    col_prev, col_page, col_next, col_zoom = st.columns([1, 2, 1, 2])
-    
-    with col_prev:
-        if st.button("← Prev"):
-            if st.session_state.current_page > 1:
-                st.session_state.current_page -= 1
-    
-    with col_page:
-        new_page = st.number_input(
-            "Page", 
-            min_value=1, 
-            max_value=st.session_state.total_pages,
-            value=st.session_state.current_page
-        )
-        if new_page != st.session_state.current_page:
-            st.session_state.current_page = new_page
-    
-    with col_next:
-        if st.button("Next →"):
-            if st.session_state.current_page < st.session_state.total_pages:
-                st.session_state.current_page += 1
-    
-    with col_zoom:
-        zoom_options = ["Fit to width", "75%", "100%", "125%", "150%"]
-        st.selectbox("Zoom", zoom_options, index=2)
-    
-    # Display PDF
+    # Display PDF without controls
     display_pdf(st.session_state.pdf_path)
     
     st.markdown("""
